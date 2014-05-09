@@ -52,9 +52,12 @@ module.exports = ( grunt ) ->
     Watch = (dirname)-> 
       if not IsIgnore(dirname)        
         # log.writeln "Watch dir : ", dirname
-        fs.watch dirname, { persistent: true }, (event, filename)-> 
+        FsWatcher = fs.watch dirname, (event, filename)-> 
           HandleFsEvent event, filename, dirname 
-      
+        
+        FsWatcher.on 'error', ()->
+          console.log arguments
+
       fs.readdir dirname, (error, files ) -> 
         return if error
         # log.writeln 'read dir', files  
@@ -71,9 +74,10 @@ module.exports = ( grunt ) ->
             # log.writeln 'pathname = ',pathname 
             Watch pathname
             
-    HandleFsEvent =  (event, filename, dirname) ->    
-      return if filename is null
-      # log.writeln'watch event - ' , event, filename, dirname
+    HandleFsEvent =  (event, filename, dirname)->    
+      log.writeln 'watch event - ' , event, filename, dirname
+
+      # return if filename is null
       pathname = dirname
       pathname +=  '/' + filename if filename
       pathname = poxislize(path.relative '.', pathname)

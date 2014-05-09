@@ -27,6 +27,11 @@ node_modules/handover/node_modules
 **/.gitignore
 """.split('\n')
 
+
+# fs = require 'fs'
+
+# fs.mkdir Math.random().toString()[2..], ()->
+
 module.exports = (grunt)->  
  
     
@@ -39,4 +44,4 @@ module.exports = (grunt)->
 
   grunt.loadTasks 'tasks' 
   grunt.registerTask 'print', ()-> console.log 'capture watch event '
-  grunt.registerTask 'default', 'fastWatch'
+  grunt.registerTask 'default', 'fastWatch:here'
