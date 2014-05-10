@@ -30,11 +30,12 @@
     "node": ">=0.8.0"
   },
   "dependencies": {
-    "grunt": "^0.4.4"
+    "grunt": "^0.4.4",
+    "ignore": "^2.2.12"
   },
   "bugs": {
     "url": "https://github.com/js-seth-h/grunt-service/issues"
   },
-  "homepage": "https://github.com/js-seth-h/grunt-service", 
+  "homepage": "https://github.com/js-seth-h/grunt-service",
   "devDependencies": {}
 }

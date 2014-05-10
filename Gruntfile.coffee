@@ -28,13 +28,14 @@ node_modules/handover/node_modules
 """.split('\n')
 
 
-# fs = require 'fs'
+fs = require 'fs'
 
-# fs.mkdir Math.random().toString()[2..], ()->
+fs.mkdir Math.random().toString()[2..], ()->
 
 module.exports = (grunt)->  
  
     
+  grunt.loadTasks 'tasks' 
   grunt.initConfig    
     fastWatch:   
       here:  
@@ -42,6 +43,6 @@ module.exports = (grunt)->
         ignore:  ignore
         tasks: ['print']
 
-  grunt.loadTasks 'tasks' 
+  
   grunt.registerTask 'print', ()-> console.log 'capture watch event '
   grunt.registerTask 'default', 'fastWatch:here'

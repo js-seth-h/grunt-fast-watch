@@ -25,7 +25,7 @@ module.exports = ( grunt ) ->
     unless memory[target]?
       memory[target] = {}
     mem = memory[target]
-
+    mem.watchedDirs = []
     done = @async()
     # log.writeln 'test'
     target = @target
@@ -43,31 +43,33 @@ module.exports = ( grunt ) ->
       
     IsIgnore = (pathname) ->
 
-      pathname = poxislize pathname
       result = Ignore.filter [ pathname]
       ret = result.length is 0
       # log.writeln 'is ignore - ', pathname , ' > ',  result,  ret if not ret 
       return ret
 
     Watch = (dirname)-> 
+
+      dirname = poxislize dirname
       if not IsIgnore(dirname)        
         # log.writeln "Watch dir : ", dirname
-        FsWatcher = fs.watch dirname, (event, filename)-> 
-          HandleFsEvent event, filename, dirname 
-        
-        FsWatcher.on 'error', ()->
-          console.log arguments
+        unless dirname in mem.watchedDirs
+          FsWatcher = fs.watch dirname, (event, filename)-> 
+            HandleFsEvent event, filename, dirname          
+          FsWatcher.on 'error', ()->
+            console.log 'error', arguments
+          mem.watchedDirs.push dirname
 
       fs.readdir dirname, (error, files ) -> 
         return if error
         # log.writeln 'read dir', files  
      
         #log.writeln 'readdir = ', dirname
-        files.forEach (file) => 
+        files.forEach (file) -> 
           
           pathname = path.relative '.', dirname + '/' + file
           
-          fs.stat pathname, (err, stat) =>
+          fs.stat pathname, (err, stat) ->
             # log.writeln 'W :  = ',pathname 
             return if not stat
             return if not stat.isDirectory()
@@ -75,12 +77,20 @@ module.exports = ( grunt ) ->
             Watch pathname
             
     HandleFsEvent =  (event, filename, dirname)->    
-      log.writeln 'watch event - ' , event, filename, dirname
+      # log.writeln 'watch event - ' , event,  " f: ", filename, ' d: ', dirname
 
       # return if filename is null
       pathname = dirname
       pathname +=  '/' + filename if filename
       pathname = poxislize(path.relative '.', pathname)
+
+      fs.exists pathname, (exists)->
+        return unless exists
+        fs.stat pathname, (err, stat)->
+          if stat.isDirectory()
+            unless pathname in mem.watchedDirs
+              Watch pathname
+
       # log.writeln'watch event - ', event, pathname
       # console.log("\x1B[1;31m[Watcher]\x1B[0m   watch - ", arguments)
       return if IsIgnore(pathname) 
