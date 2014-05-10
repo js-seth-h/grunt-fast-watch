@@ -26,11 +26,7 @@ node_modules/handover/node_modules
 **/.git
 **/.gitignore
 """.split('\n')
-
-
-fs = require 'fs'
-
-fs.mkdir Math.random().toString()[2..], ()->
+ 
 
 module.exports = (grunt)->  
  
@@ -39,10 +35,10 @@ module.exports = (grunt)->
   grunt.initConfig    
     fastWatch:   
       here:  
-        dir : '.'
+        dirs : '.' # or dirs : ['.', '../static']
         ignore:  ignore
         tasks: ['print']
 
-  
+
   grunt.registerTask 'print', ()-> console.log 'capture watch event '
   grunt.registerTask 'default', 'fastWatch:here'

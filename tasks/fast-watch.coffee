@@ -125,12 +125,14 @@ module.exports = ( grunt ) ->
       grunt.task.run "fastWatch:#{target}"
       done()
  
-    unless mem.watched?
-
+    unless mem.watched? 
       Ignore = ignore 
         twoGlobstars: true
         ignore : patterns
 
       mem.watched = true
       log.writeln 'Watching... '
-      Watch data.dir
+      data.dirs = [data.dirs] if 'string' is grunt.util.kindOf data.dirs
+      
+      for dir in data.dirs
+        Watch dir
