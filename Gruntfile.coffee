@@ -1,44 +1,36 @@
- 
-ignore = """
+
+ignoreDir = """ 
 .git
 .gitignore
-package.json  
 tmp
 node_modules
-*.bak
-*.htm
-*.html
-*.css
-*.ico 
-*.png
-*.gif
-*.js
-*.jpg 
-*.jpeg
-*.less
-*.bat
-*.lnk 
-**/template
-# saf - this is comment
-public  
-!node_modules/handover
-node_modules/handover/node_modules
-**/.git
-**/.gitignore
-""".split('\n')
- 
 
-module.exports = (grunt)->  
+""".split '\n' 
+
+serverMatch = """
+*.coffee
+""".split '\n'
+  
+clientMatch = """ 
+package.json
+""".split '\n'   
+
+module.exports = (grunt)->   
  
-    
+  grunt.initConfig       
+    fastWatch:
+      cwd:     
+        dir : '.'
+        ignoreSubDir : ignoreDir 
+        trigger:
+          server:  
+            match : serverMatch
+            tasks: ["print:Server"]
+          client: 
+            match : clientMatch  
+            tasks: ['print:Client']
+
   grunt.loadTasks 'tasks' 
-  grunt.initConfig    
-    fastWatch:   
-      here:  
-        dirs : '.' # or dirs : ['.', '../static']
-        ignore:  ignore
-        tasks: ['print']
 
-
-  grunt.registerTask 'print', ()-> console.log 'capture watch event '
-  grunt.registerTask 'default', 'fastWatch:here'
+  grunt.registerTask 'print', (arg)-> console.log 'PRINT ',arg
+  grunt.registerTask 'default', 'fastWatch:cwd'

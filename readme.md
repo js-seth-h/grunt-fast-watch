@@ -16,10 +16,13 @@ I am impatience, so made this.
 
 * fast, fast, fast!
 * surely capture fs event in windows.
-* support ignore setting(git ignore style, visit [ignore](https://www.npmjs.org/package/ignore)) 
+* watch `dir`, not `file`
+* support ignore setting(git ignore style, visit [ignore][ig]) 
+* call different task by file path matching   
 * din't unwatch when call `tasks`
 * after running `tasks`, restart `fastWatch` task ( without redundant watch ) 
 
+[ig]: https://www.npmjs.org/package/ignore
 ## Getting Started
 
 If you haven't used [grunt][] before, be sure to check out the [Getting Started][] guide, as it explains how to create a [gruntfile][Getting Started] as well as install and use grunt plugins. Once you're familiar with that process, install this plugin with this command:
@@ -45,66 +48,71 @@ grunt.loadNpmTasks('grunt-fast-watch');
 
 ```coffee
  
-ignore = """
+ignoreDir = """ 
 .git
 .gitignore
-package.json  
 tmp
 node_modules
-*.bak
-*.htm
-*.html
-*.css
-*.ico 
-*.png
-*.gif
-*.js
-*.jpg 
-*.jpeg
-*.less
-*.bat
-*.lnk 
-**/template
-# saf - this is comment
-public  
-!node_modules/handover
-node_modules/handover/node_modules
-**/.git
-**/.gitignore
-""".split('\n')
- 
 
-module.exports = (grunt)->  
- 
-    
-  grunt.loadTasks 'tasks' 
-  grunt.initConfig    
-    fastWatch:   
-      here:  
-        dirs : '.' # or dirs : ['.', '../static']
-        ignore:  ignore
-        tasks: ['print']
+""".split '\n' 
 
-
-  grunt.registerTask 'print', ()-> console.log 'capture watch event '
-  grunt.registerTask 'default', 'fastWatch:here'
-
+serverMatch = """
+*.coffee 
+""".split '\n'
   
+clientMatch = """
+package.json
+""".split '\n'    
+
+
+module.exports = (grunt)->   
+
+  grunt.initConfig       
+    fastWatch:    
+      cwd:     
+        dir : '.'
+        ignoreSubDir : ignoreDir 
+        trigger:
+          server:  
+            match : serverMatch
+            tasks: ["print:Server"]
+          client: 
+            match : clientMatch 
+            tasks: ['print:Client']
+
+  grunt.loadTasks 'tasks' 
+
+  grunt.registerTask 'print', (arg)-> console.log 'PRINT ',arg
+  grunt.registerTask 'default', 'fastWatch:cwd'
+
+
+   
 ```
 
-Watch all event  under `.` ( = current workign directory ).
-And then filtered by ignore pattern
+Watch all event under `.` ( = current workign directory ) exclude sub-direcoty matched by `ignoreSubDir`
+
+When file system event wached, it test `trigger.*.match` (by [minimatch][mm] )
+
 If passed, run tasks.
 
 
+[mm]:https://www.npmjs.org/package/minimatch
+
  
 
-## Options
-	 
-it has 3 options: dirs, ignore, tasks.
+## Configuration
 
-I beleive it is trivial.
- 
+
+`dir` & `ignoreSubDir` designate dirs which are watched.
+
+`trigger` contains `tasks` list which are called by `match`
+
+
+see [ignore][ig] for `ignoreSubDir`.
+
+see [minimatch][mm] for `match`.
+
+
 ## License
 
 (The MIT License)

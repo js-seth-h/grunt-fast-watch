@@ -5,9 +5,15 @@ MIT License
 fs = require 'fs' 
 path = require 'path'
 ignore = require('ignore') 
+minimatch = require("minimatch")
+
+
+console.log '-------',  minimatch "bar.foo", "*.foo" 
 
 log = undefined
- 
+
+trim = (str)->
+  str.replace /(^\s*)|(\s*$)/gm, ""
 
 arrayUnique = (a) ->
   a.reduce ((p, c) ->
@@ -19,6 +25,7 @@ memory = {}
  
 module.exports = ( grunt ) -> 
   log = grunt.log
+  verbose = grunt.verbose
   grunt.registerMultiTask 'fastWatch', 'fast', () ->
     # console.log.writeln this 
 
@@ -32,8 +39,7 @@ module.exports = ( grunt ) ->
     data = @data
     options = @options()
 
-    patterns = data.ignore
-    # log.writeln 'Ignore Patterns - ',  patterns
+    # log.writeln 'IgnoreSubDir Patterns - ',  patterns
 
 
     poxislize = (pathname) ->
@@ -41,9 +47,9 @@ module.exports = ( grunt ) ->
       sep = '/'
       pathname.replace(/\\/g, sep);
       
-    IsIgnore = (pathname) ->
+    IsIgnoreSubDir = (pathname) ->
 
-      result = Ignore.filter [ pathname]
+      result = IgnoreSubDir.filter [ pathname]
       ret = result.length is 0
       # log.writeln 'is ignore - ', pathname , ' > ',  result,  ret if not ret 
       return ret
@@ -51,9 +57,11 @@ module.exports = ( grunt ) ->
     Watch = (dirname)-> 
 
       dirname = poxislize dirname
-      if not IsIgnore(dirname)        
-        # log.writeln "Watch dir : ", dirname
+
+      if not IsIgnoreSubDir(dirname)        
         unless dirname in mem.watchedDirs
+
+          verbose.writeln 'Watch Dir:', dirname
           FsWatcher = fs.watch dirname, (event, filename)-> 
             HandleFsEvent event, filename, dirname          
           FsWatcher.on 'error', ()->
@@ -77,12 +85,11 @@ module.exports = ( grunt ) ->
             Watch pathname
             
     HandleFsEvent =  (event, filename, dirname)->    
-      # log.writeln 'watch event - ' , event,  " f: ", filename, ' d: ', dirname
 
       # return if filename is null
       pathname = dirname
       pathname +=  '/' + filename if filename
-      pathname = poxislize(path.relative '.', pathname)
+      pathname = poxislize(path.relative data.dir, pathname)
 
       fs.exists pathname, (exists)->
         return unless exists
@@ -93,31 +100,60 @@ module.exports = ( grunt ) ->
 
       # log.writeln'watch event - ', event, pathname
       # console.log("\x1B[1;31m[Watcher]\x1B[0m   watch - ", arguments)
-      return if IsIgnore(pathname) 
+      return if IsIgnoreSubDir(pathname) 
+      verbose.writeln 'watch event - ' , event,  " f: ", filename, ' d: ', dirname
 
-        # return log.writeln'Ignored event - ',  event, filename
+        # return log.writeln'IgnoreSubDird event - ',  event, filename
 
       # log.writeln 'watched event - ', event, pathname 
 
-      DelayedEvent(event, pathname) 
+      debounce(event, pathname) 
 
-  
-    DelayedEvents = []
-    DelayedEventTimer = null
-    DelayedEvent = (event, pathname)->
-      txt = "Watched '#{pathname}' #{event}"
-      if DelayedEventTimer is null
-        DelayedEvents = []
-        DelayedEvents.push txt
-        DelayedEventTimer = setTimeout ()->
-          DelayedEventTimer = null
+ 
+    pathsOfEvent = []
+    debounceTimer = null
+    debounce = (event, pathname)->
+      # txt = "Watched '#{pathname}' #{event}"
+      if debounceTimer is null
+        pathsOfEvent = []
+        pathsOfEvent.push pathname
+        debounceTimer = setTimeout ()->
+          debounceTimer = null
 
-          for e in arrayUnique DelayedEvents
-            log.writeln e
-          RunTasks()
+          # for where in arrayUnique pathsOfEvent
+            # log.writeln e
+          # RunTasks()
+          matchUp arrayUnique pathsOfEvent
         ,500
       else
-        DelayedEvents.push txt
+        pathsOfEvent.push pathname
+
+    matchUp = (paths)->
+      verbose.writeln 'Match up - paths of event : ', paths
+
+      tasksToCall = []
+      for own key, set of data.trigger
+        do (key, set)->
+
+          verbose.writeln 'matching ', key
+          for pattern in set.match
+            # verbose.writeln pattern
+            for pathname in paths
+              verbose.writeln "  match test  `#{trim(pattern)}` `#{pathname}`" 
+              if minimatch pathname, trim(pattern), { matchBase: true }
+                verbose.writeln ' ', pathname, ' match with', key
+                # Call 
+                tasksToCall = tasksToCall.concat set.tasks
+                return 
+
+      if tasksToCall.length > 0
+        verbose.writeln 'Call Tasks', tasksToCall
+        grunt.task.run tasksToCall
+        grunt.task.run "fastWatch:#{target}"
+        done()
+      return
+
+
 
     RunTasks = ()->
       # log.writeln 'RunTasks - ', data.tasks
@@ -126,13 +162,17 @@ module.exports = ( grunt ) ->
       done()
  
     unless mem.watched? 
-      Ignore = ignore 
+      IgnoreSubDir = ignore 
         twoGlobstars: true
-        ignore : patterns
+        ignore : data.ignoreSubDir
 
       mem.watched = true
       log.writeln 'Watching... '
-      data.dirs = [data.dirs] if 'string' is grunt.util.kindOf data.dirs
-      
-      for dir in data.dirs
-        Watch dir
+      # data.dirs = [data.dirs] if 'string' is grunt.util.kindOf data.dirs
+    
+      # for dir in data.dirs
+      #   Watch dir
+
+      Watch data.dir
+    else 
+      log.writeln "Continue Watching..."
