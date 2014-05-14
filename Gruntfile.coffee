@@ -1,33 +1,42 @@
 
-ignoreDir = """ 
+trim = (str)->
+  str.replace /(^\s*)|(\s*$)/gm, ""
+fromLines = (patterns)->
+  return trim(patterns).split('\n').map (pattern)->
+    trim(pattern)
+
+
+ignoreDir = fromLines """ 
 .git
 .gitignore
-tmp
+tmp        
 node_modules
 
-""".split '\n' 
+"""
+serverCares = fromLines """
+*.coffee       
+*.json
+""" 
 
-serverMatch = """
-*.coffee
-""".split '\n'
-  
-clientMatch = """ 
-package.json
-""".split '\n'   
-
+clientCares = fromLines """ 
+*.coffee   
+!Gruntfile.coffee
+package.json 
+"""  # every coffee file, but Gruntfile.coffe + package.json
+ 
 module.exports = (grunt)->   
  
-  grunt.initConfig       
-    fastWatch:
+  grunt.initConfig 
+    fastWatch: 
       cwd:     
-        dir : '.'
+        dir : '.' 
         ignoreSubDir : ignoreDir 
         trigger:
           server:  
-            match : serverMatch
+            care : serverCares
             tasks: ["print:Server"]
           client: 
-            match : clientMatch  
+            care : clientCares  
             tasks: ['print:Client']
 
   grunt.loadTasks 'tasks' 

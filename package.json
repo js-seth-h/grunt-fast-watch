@@ -1,8 +1,8 @@
 {
   "name": "grunt-fast-watch",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "start/stop/restart service( = background process), support pidfile & kill ",
-  "keywords": [  
+  "keywords": [
     "gruntplugin",
     "shell",
     "command",
@@ -13,7 +13,7 @@
     "service",
     "kill",
     "pidfile"
-  ],  
+  ],
   "license": "MIT",
   "author": "js.seth.h <js.seth.h@gmail.com>",
   "files": [
@@ -24,15 +24,14 @@
     "url": "git://github.com/js-seth-h/grunt-service"
   },
   "scripts": {
-    "test": "grunt" 
+    "test": "grunt"
   },
   "engines": {
     "node": ">=0.8.0"
-  }, 
+  },
   "dependencies": {
-    "grunt": "^0.4.4", 
-    "ignore": "^2.2.12",
-    "minimatch": "^0.3.0"
+    "grunt": "^0.4.4",
+    "ignore": "^2.2.12"
   },
   "bugs": {
     "url": "https://github.com/js-seth-h/grunt-service/issues"

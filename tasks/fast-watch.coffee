@@ -4,11 +4,8 @@ MIT License
 ### 
 fs = require 'fs' 
 path = require 'path'
-ignore = require('ignore') 
-minimatch = require("minimatch")
-
-
-console.log '-------',  minimatch "bar.foo", "*.foo" 
+ignore = require('ignore')  
+ 
 
 log = undefined
 
@@ -22,6 +19,7 @@ arrayUnique = (a) ->
   ), []
 
 memory = {}
+
  
 module.exports = ( grunt ) -> 
   log = grunt.log
@@ -136,16 +134,14 @@ module.exports = ( grunt ) ->
         do (key, set)->
 
           verbose.writeln 'matching ', key
-          for pattern in set.match
-            # verbose.writeln pattern
-            for pathname in paths
-              verbose.writeln "  match test  `#{trim(pattern)}` `#{pathname}`" 
-              if minimatch pathname, trim(pattern), { matchBase: true }
-                verbose.writeln ' ', pathname, ' match with', key
-                # Call 
-                tasksToCall = tasksToCall.concat set.tasks
-                return 
 
+          result = set._careFilter.filter paths
+          # verbose.writeln 'matching ', paths, '-> ', result
+
+          if result.length isnt paths.length
+            tasksToCall = tasksToCall.concat set.tasks
+            return 
+ 
       if tasksToCall.length > 0
         verbose.writeln 'Call Tasks', tasksToCall
         grunt.task.run tasksToCall
@@ -168,6 +164,15 @@ module.exports = ( grunt ) ->
 
       mem.watched = true
       log.writeln 'Watching... '
+
+
+      for own key, set of data.trigger
+        set._careFilter = ignore 
+          matchCase : true
+          twoGlobstars: true
+          ignore : set.care 
+
+
       # data.dirs = [data.dirs] if 'string' is grunt.util.kindOf data.dirs
     
       # for dir in data.dirs

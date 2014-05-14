@@ -2,7 +2,7 @@
 
 > similar to [grunt-contrib-watch](https://github.com/gruntjs/grunt-contrib-watch), but faster. 
 
-## Why made this?
+## Why Another Watch?
 
 [grunt-contrib-watch](https://github.com/gruntjs/grunt-contrib-watch) somtime didn't capture fs event (in windows). And, it too slow for my purpose.
 
@@ -19,7 +19,7 @@ I am impatience, so made this.
 * watch `dir`, not `file`
 * support ignore setting(git ignore style, visit [ignore][ig]) 
 * call different task by file path matching   
-* din't unwatch when call `tasks`
+* didn't unwatch when call `tasks`
 * after running `tasks`, restart `fastWatch` task ( without redundant watch ) 
 
 [ig]: https://www.npmjs.org/package/ignore
@@ -48,36 +48,44 @@ grunt.loadNpmTasks('grunt-fast-watch');
 
 ```coffee
  
-ignoreDir = """ 
+trim = (str)->
+  str.replace /(^\s*)|(\s*$)/gm, ""
+fromLines = (patterns)->
+  return trim(patterns).split('\n').map (pattern)->
+    trim(pattern)
+
+
+ignoreDir = fromLines """ 
 .git
 .gitignore
-tmp
+tmp        
 node_modules
 
-""".split '\n' 
+"""
+serverCares = fromLines """
+*.coffee       
+*.json
+""" 
 
-serverMatch = """
-*.coffee 
-""".split '\n'
-  
-clientMatch = """
-package.json
-""".split '\n'    
-
-
+clientCares = fromLines """ 
+*.coffee   
+!Gruntfile.coffee
+package.json 
+"""  # every coffee file, but Gruntfile.coffe + package.json
+ 
 module.exports = (grunt)->   
-
-  grunt.initConfig       
-    fastWatch:    
+ 
+  grunt.initConfig 
+    fastWatch:
       cwd:     
-        dir : '.'
+        dir : '.' 
         ignoreSubDir : ignoreDir 
         trigger:
           server:  
-            match : serverMatch
+            care : serverCares
             tasks: ["print:Server"]
           client: 
-            match : clientMatch 
+            care : clientCares  
             tasks: ['print:Client']
 
   grunt.loadTasks 'tasks' 
@@ -85,32 +93,33 @@ module.exports = (grunt)->
   grunt.registerTask 'print', (arg)-> console.log 'PRINT ',arg
   grunt.registerTask 'default', 'fastWatch:cwd'
 
-
    
 ```
 
-Watch all event under `.` ( = current workign directory ) exclude sub-direcoty matched by `ignoreSubDir`
+Watch all event under `dir` ( `.` = current workign directory ) exclude sub-direcoty matched by `.ignoreSubDir`
 
-When file system event wached, it test `trigger.*.match` (by [minimatch][mm] )
+When file system event wached, it test `trigger.*.care`
 
 If passed, run tasks.
 
-
-[mm]:https://www.npmjs.org/package/minimatch
-
- 
 
 ## Configuration
 
 
 `dir` & `ignoreSubDir` designate dirs which are watched.
 
-`trigger` contains `tasks` list which are called by `match`
+`trigger` contains `tasks` list which are called by `care`
 
+See [ignore][ig] for `ignoreSubDir` and `care`
 
-see [ignore][ig] for `ignoreSubDir`.
+**one more thing, matching of `care` is reverse result of [ignore][ig]**
 
-see [minimatch][mm] for `match`.
+Put simply, [ignore][ig] module filter out changed file path, then watcher cares. And vice versa.
+
+It may be seem weird, but [ignore]][ig] is just filepath filter.
+
+Anyway, write pattern naturally then fast-watch understands.
+ 
 
 
 ## License
