@@ -27,16 +27,17 @@ module.exports = ( grunt ) ->
   grunt.registerMultiTask 'fastWatch', 'fast', () ->
     # console.log.writeln this 
 
-    unless memory[target]?
-      memory[target] = {}
-    mem = memory[target]
-    mem.watchedDirs = []
     done = @async()
     # log.writeln 'test'
     target = @target
     data = @data
     options = @options()
 
+    unless memory[target]?
+      memory[target] = {}
+    mem = memory[target]
+    mem.watchedDirs = []
+    
     # log.writeln 'IgnoreSubDir Patterns - ',  patterns
 
 
