@@ -24,7 +24,7 @@ memory = {}
 module.exports = ( grunt ) -> 
   log = grunt.log
   verbose = grunt.verbose
-  grunt.registerMultiTask 'fastWatch', 'fast', () ->
+  grunt.registerMultiTask 'fastWatch', 'watch directory and trigger change event', (arg1 = 'start') ->
     # console.log.writeln this 
 
     done = @async()
@@ -158,27 +158,49 @@ module.exports = ( grunt ) ->
       grunt.task.run "fastWatch:#{target}"
       done()
  
-    unless mem.watched? 
-      IgnoreSubDir = ignore 
-        twoGlobstars: true
-        ignore : data.ignoreSubDir
+    Start = ()->  
+      unless mem.watched?  
+        if data.pidFile
+          fs.writeFile(data.pidFile, process.pid)
 
-      mem.watched = true
-      log.writeln 'Watching... '
-
-
-      for own key, set of data.trigger
-        set._careFilter = ignore 
-          matchCase : true
+        IgnoreSubDir = ignore 
           twoGlobstars: true
-          ignore : set.care 
+          ignore : data.ignoreSubDir
+
+        mem.watched = true
+        log.writeln 'Watching... '
 
 
-      # data.dirs = [data.dirs] if 'string' is grunt.util.kindOf data.dirs
-    
-      # for dir in data.dirs
-      #   Watch dir
+        for own key, set of data.trigger
+          set._careFilter = ignore 
+            matchCase : true
+            twoGlobstars: true
+            ignore : set.care 
 
-      Watch data.dir
-    else 
-      log.writeln "Continue Watching..."
+
+        # data.dirs = [data.dirs] if 'string' is grunt.util.kindOf data.dirs
+      
+        # for dir in data.dirs
+        #   Watch dir
+
+        Watch data.dir
+      else 
+        log.writeln "Continue Watching..."
+
+    Stop = ()-> 
+      if data.pidFile
+        if fs.existsSync(data.pidFile)
+          pid = parseInt(fs.readFileSync data.pidFile)
+          try
+            process.kill pid
+          catch err
+            log.writeln "[FastWatch] already killed." 
+            return callback()
+      else
+        done new Error "pidFile required"
+
+    switch arg1
+      when "start"    
+        Start()
+      when "stop"
+        Stop()

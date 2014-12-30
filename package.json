@@ -1,6 +1,6 @@
 {
   "name": "grunt-fast-watch",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "start/stop/restart service( = background process), support pidfile & kill ",
   "keywords": [
     "gruntplugin",
